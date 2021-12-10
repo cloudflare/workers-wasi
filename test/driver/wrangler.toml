@@ -1,0 +1,20 @@
+name = "worker"
+type = "javascript"
+route = ''
+zone_id = ''
+usage_model = ''
+compatibility_flags = []
+workers_dev = true
+compatibility_date = "2021-10-05"
+
+[build]
+
+[build.upload]
+format = "modules"
+main = "./index.mjs"
+dir = "../../build/test/"
+
+[[build.upload.rules]]
+type = "CompiledWasm"
+globs = ["**/*.wasm"]
+

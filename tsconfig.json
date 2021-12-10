@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "strict": true,
+    "target": "es2020",
+    "lib": ["ESNext"],
+    "typeRoots": [],
+    "declaration": true,
+    "isolatedModules": true,
+    "emitDeclarationOnly": true,
+    "declarationDir": "dist",
+    "module": "esnext",
+    "esModuleInterop": true,
+    "types": [
+      "@cloudflare/workers-types"
+    ]
+  },
+  "include": ["src/**/*"]
+}
+

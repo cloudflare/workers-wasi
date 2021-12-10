@@ -1,0 +1,16 @@
+[submodule "deps/rapidjson"]
+	path = deps/rapidjson
+	url = https://github.com/Tencent/rapidjson
+[submodule "deps/wasmtime"]
+	path = deps/wasmtime
+	url = https://github.com/bytecodealliance/wasmtime.git
+[submodule "deps/littlefs"]
+	path = deps/littlefs
+	url = https://github.com/littlefs-project/littlefs
+[submodule "deps/wasi-test-suite"]
+	path = deps/wasi-test-suite
+	url = https://github.com/caspervonb/wasi-test-suite
+[submodule "deps/asyncify"]
+	path = deps/asyncify
+	url = https://github.com/GoogleChromeLabs/asyncify
+	ignore = dirty

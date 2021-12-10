@@ -1,0 +1,24 @@
+{
+  "name": "test",
+  "private": true,
+  "devDependencies": {
+    "@cloudflare/workers-types": "^3.2.0",
+    "@types/jest": "^27.0.2",
+    "esbuild": "^0.13.13",
+    "jest": "^27.3.1",
+    "miniflare": "^1.4.1"
+  },
+  "dependencies": {
+    "workers-wasi": "file:.."
+  },
+  "jest": {
+    "extensionsToTreatAsEsm": [
+      ".ts"
+    ],
+    "verbose": true,
+    "testRegex": "/.*\\.test\\.ts$",
+    "transform": {
+      "^.+\\.tsx?$": "./transform.js"
+    }
+  }
+}

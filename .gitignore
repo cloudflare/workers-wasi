@@ -1,0 +1,5 @@
+build
+dist
+node_modules
+deps/wasi-sdk-13.0
+

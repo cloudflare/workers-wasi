@@ -1,4 +1,4 @@
-import { _FS } from 'workers-wasi'
+import { _FS } from '@cloudflare/workers-wasi'
 
 export interface ExecOptions {
   args?: string[]

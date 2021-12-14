@@ -3,7 +3,7 @@ import { Buffer } from 'buffer'
 import { ExecOptions, ExecResult } from './driver/common'
 import fs from 'fs/promises'
 import path from 'path'
-import type { _FS } from 'workers-wasi'
+import type { _FS } from '@cloudflare/workers-wasi'
 
 export class TestEnv {
   #mf: Miniflare

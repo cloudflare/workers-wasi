@@ -1,7 +1,7 @@
 import fs from 'fs/promises'
 import path from 'path'
 import * as utils from './utils'
-import type { Environment } from 'workers-wasi'
+import type { Environment } from '@cloudflare/workers-wasi'
 
 interface Config {
   env?: Environment

@@ -31,6 +31,15 @@ cd ./workers-wasi
 make -j test
 ```
 
+## Build with Docker
+
+```
+git clone --recursive git@github.com:cloudflare/workers-wasi.git
+cd ./workers-wasi
+docker build . -t workers-wasi-build
+docker run -it -v $(pwd):/workers-wasi workers-wasi-build
+```
+
 ## Testing
 
 We aim to be interchangeable with other WASI implementations.  Integration tests are run locally using [Miniflare](https://github.com/cloudflare/miniflare) against the following test suites:

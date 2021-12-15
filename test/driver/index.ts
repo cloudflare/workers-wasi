@@ -1,4 +1,4 @@
-import { WASI, traceImportsToConsole } from 'workers-wasi'
+import { WASI, traceImportsToConsole } from '@cloudflare/workers-wasi'
 import { ModuleTable } from '../../build/test/wasm-table'
 import { ExecOptions, ExecResult } from './common'
 

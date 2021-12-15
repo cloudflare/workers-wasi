@@ -9,7 +9,7 @@
     "miniflare": "^1.4.1"
   },
   "dependencies": {
-    "workers-wasi": "file:.."
+    "@cloudflare/workers-wasi": "file:.."
   },
   "jest": {
     "extensionsToTreatAsEsm": [

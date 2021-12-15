@@ -9,7 +9,7 @@ RUN rustup target add wasm32-wasi
 
 # install nodejs
 RUN curl -sL https://deb.nodesource.com/setup_17.x  | bash -
-RUN apt-get -y install nodejs
+RUN apt-get -qq -y install nodejs
 
 WORKDIR /workers-wasi
 

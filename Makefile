@@ -3,7 +3,7 @@
 
 all: dist/index.mjs
 
-ci: all
+ci: test
 	@git diff --exit-code HEAD # error on unexpected changes, eg. out of date package-lock.json
 
 test: all
@@ -13,6 +13,7 @@ clean:
 	rm -rf ./dist/
 	rm -rf ./build/
 	rm -rf ./node_modules/
+	rm -rf ./test/node_modules/
 
 WASI_SDK_PATH := ./deps/wasi-sdk-13.0
 WASI_SYSROOT  := $(abspath ${WASI_SDK_PATH}/share/wasi-sysroot)

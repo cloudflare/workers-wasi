@@ -24,12 +24,8 @@ await withEnv(async (fixture: TestEnv) => {
   const files = await filesWithExt(dir, '.wasm')
   for (const file of files) {
     const name = path.join(path.basename(dir), file)
-    if (todos.has(name)) {
-      test.todo(name)
-      continue
-    }
-
-    test(name, async () => {
+    const fn = todos.has(name) ? test.skip : test
+    fn(name, async () => {
       await fixture.exec({
         preopens: ['/tmp'],
         fs: {

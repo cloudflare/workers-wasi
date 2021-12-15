@@ -1,8 +1,8 @@
 FROM rust:slim-buster
 
-RUN apt-get update && \
-    apt-get install --no-install-recommends -y \
-    build-essential ca-certificates curl && \
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -qq && \
+    apt-get install -qq --no-install-recommends -y make curl && \
     rm -rf /var/lib/apt/lists/*
 
 RUN rustup target add wasm32-wasi

@@ -3,6 +3,9 @@
 
 all: dist/index.mjs
 
+ci: all
+	@git diff --exit-code HEAD # error on unexpected changes, eg. out of date package-lock.json
+
 test: all
 	cd ./test && $(MAKE)
 

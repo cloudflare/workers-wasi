@@ -37,7 +37,7 @@ make -j test
 git clone --recursive git@github.com:cloudflare/workers-wasi.git
 cd ./workers-wasi
 cat ./Dockerfile | docker build -t workers-wasi-build -
-docker run -it -v $(pwd):/workers-wasi workers-wasi-build
+docker run --rm -it -v $(pwd):/workers-wasi workers-wasi-build
 ```
 
 ## Testing

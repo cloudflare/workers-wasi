@@ -20,4 +20,11 @@ jobs:
       run: cat ./Dockerfile | docker build -t workers-wasi-build -
     - name: Build
       run: docker run --rm -v $(pwd):/workers-wasi workers-wasi-build make -j ci
+    - name: Test Report
+      uses: dorny/test-reporter@v1
+      if: success() || failure()
+      with:
+        name: Test Report
+        path: ./build/test/junit.xml
+        reporter: jest-junit
 

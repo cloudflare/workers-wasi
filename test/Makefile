@@ -38,7 +38,8 @@ node_modules: ./package.json ./package-lock.json
 
 run-tests: $(BUNDLE) $(WASI_TEST_SUITE_DST_TESTS) $(WASMTIME_DST_TESTS) $(OUTPUT_DIR)/wasm-table.ts node_modules
 	$(shell npm bin)/tsc -p ./tsconfig.json
-	NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 $(shell npm bin)/jest --detectOpenHandles -i
+	JEST_JUNIT_OUTPUT_DIR=$(OUTPUT_DIR) NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 \
+        $(shell npm bin)/jest --detectOpenHandles -i
 
 $(OUTPUT_DIR)/wasm-table.ts: $(WASI_TEST_SUITE_DST_TESTS) $(WASMTIME_DST_TESTS)
 	mkdir -p $(@D)

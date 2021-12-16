@@ -6,15 +6,20 @@
     "@types/jest": "^27.0.2",
     "esbuild": "^0.13.13",
     "jest": "^27.3.1",
+    "jest-junit": "^13.0.0",
     "miniflare": "^1.4.1"
   },
   "dependencies": {
     "@cloudflare/workers-wasi": "file:.."
   },
+  "jest-junit": {
+    "usePathForSuiteName": "true"
+  },
   "jest": {
     "extensionsToTreatAsEsm": [
       ".ts"
     ],
+    "reporters": [ "default", "jest-junit" ],
     "verbose": true,
     "testRegex": "/.*\\.test\\.ts$",
     "transform": {

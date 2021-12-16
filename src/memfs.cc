@@ -55,11 +55,17 @@ __wasi_filetype_t from_lfs_type(int type) {
   return __WASI_FILETYPE_REGULAR_FILE;
 }
 
-int to_lfs_open_flags(__wasi_oflags_t flags) {
+int to_lfs_open_flags(const __wasi_oflags_t flags,
+                      const __wasi_rights_t rights) {
   int result = 0;
 
-  // TODO:
-  result |= LFS_O_RDWR;
+  if (rights & __WASI_RIGHTS_FD_READ) {
+    result |= LFS_O_RDONLY;
+  }
+
+  if (rights & __WASI_RIGHTS_FD_WRITE) {
+    result |= LFS_O_WRONLY;
+  }
 
   if (flags & __WASI_OFLAGS_CREAT) {
     result |= LFS_O_CREAT;
@@ -645,7 +651,8 @@ struct Context {
       desc->type = LFS_TYPE_REG;
       desc->rights_base &= ~WASI_PATH_RIGHTS;
       RETURN_IF_LFS_ERR(
-          lfs_file_open(&lfs, &desc->file(), path, to_lfs_open_flags(oflags)));
+          lfs_file_open(&lfs, &desc->file(), path,
+                        to_lfs_open_flags(oflags, desc->rights_base)));
     }
 
     const auto new_fd = next_fd--;

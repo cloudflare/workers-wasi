@@ -101,7 +101,7 @@ __wasi_errno_t from_lfs_error(int error) {
 }
 
 struct FileMetadata {
-  // TODO: > 100 required for wastime tests
+  // 100 required for wastime tests
   __wasi_timestamp_t mtim = 100;
   __wasi_timestamp_t atim = 100;
 };
@@ -834,8 +834,8 @@ struct Context {
   __wasi_errno_t resolve_path(__wasi_fd_t fd,
                               const std::string_view& unresolved_path,
                               __wasi_rights_t rights, const char** result) {
-    const auto& dir = REQUIRE_TYPED_FD(fd, LFS_TYPE_DIR, rights, false).path;
-    return resolve_path(dir, unresolved_path, result);
+    return resolve_path(REQUIRE_TYPED_FD(fd, LFS_TYPE_DIR, rights, false).path,
+                        unresolved_path, result);
   }
 } context;
 

@@ -67,12 +67,10 @@ export class MemFS {
     start()
 
     const data = new TextEncoder().encode(JSON.stringify({ preopens, fs }))
-    return this.#call(() => {
-      return (this.#instance.exports.initialize_internal as Function)(
-        this.#copyFrom(data),
-        data.byteLength
-      )
-    })
+
+    const initialize_internal = this.#instance.exports
+      .initialize_internal as Function
+    initialize_internal(this.#copyFrom(data), data.byteLength)
   }
 
   initialize(hostMemory: WebAssembly.Memory) {
@@ -84,24 +82,13 @@ export class MemFS {
     return new DataView(memory.buffer)
   }
 
-  #alloca(size: number) {
-    return (this.#instance.exports.tmp_alloc as Function)(size)
-  }
-
   #copyFrom(src: Uint8Array): number {
-    const dstAddr = this.#alloca(src.byteLength)
-    const dst = new Uint8Array(
-      this.#getInternalView().buffer,
-      dstAddr,
+    const dstAddr = (this.#instance.exports.allocate as Function)(
       src.byteLength
     )
-    dst.set(src)
+    new Uint8Array(this.#getInternalView().buffer, dstAddr, src.byteLength).set(
+      src
+    )
     return dstAddr
-  }
-
-  #call(callback: any) {
-    const result = callback()
-    ;(this.#instance.exports.tmp_free as Function)()
-    return result
   }
 }

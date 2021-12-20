@@ -70,7 +70,6 @@ Timestamps are captured using `Date.now()` which has [unique behavior](https://d
 ## TODO (remove)
 Misc TODO:
 - [ ] path_rename (update old path for existing open fds)
-- [ ] clean up tmp_alloc() - wrap all exports
 - [ ] fix preopens interface (use object), and update options docs
 - [ ] document difference between nodejs options and ours (streams/fs)
 - [ ] complete memfs.cc todos

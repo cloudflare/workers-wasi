@@ -21,11 +21,27 @@ WASI_SYSROOT  := $(abspath ${WASI_SDK_PATH}/share/wasi-sysroot)
 export CC      := $(abspath ${WASI_SDK_PATH}/bin/clang) -target wasm32-wasi --sysroot=${WASI_SYSROOT}
 export CFLAGS  := -Oz -flto -I ./deps/rapidjson/include -I./deps/littlefs -fno-exceptions -include ./src/config.h
 export LDFLAGS := -lstdc++ -flto -Wl,--allow-undefined
+export CXXFLAGS := -std=c++20
 
-MEMFS_SRC := ./deps/littlefs/lfs.c ./deps/littlefs/lfs_util.c ./deps/littlefs/bd/lfs_rambd.c ./src/memfs.cc
-dist/memfs.wasm: $(MEMFS_SRC) $(WASI_SDK_PATH) ./src/config.h
+WASM_OBJ := \
+	./build/obj/deps/littlefs/lfs.o \
+	./build/obj/deps/littlefs/lfs_util.o \
+	./build/obj/deps/littlefs/bd/lfs_rambd.o \
+	./build/obj/src/memfs.o \
+	./build/obj/src/util.o
+
+HEADERS := $(wildcard ./src/*.h)
+build/obj/%.o: %.c $(HEADERS) $(WASI_SDK_PATH)
 	mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(MEMFS_SRC) -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
+
+build/obj/%.o: %.cc $(HEADERS) $(WASI_SDK_PATH)
+	mkdir -p $(@D)
+	$(CC) -c $(CFLAGS) $(CXXFLAGS) $< -o $@
+
+dist/memfs.wasm: $(WASM_OBJ)
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(WASM_OBJ) -o $@
 
 node_modules: ./package.json ./package-lock.json
 	npm install --no-audit --no-optional --no-fund --no-progress --quiet

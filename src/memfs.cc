@@ -605,13 +605,6 @@ struct Context {
                            const __wasi_fdflags_t fd_flags,
                            __wasi_fd_t* retptr0) {
     __wasi_rights_t required_rights = __WASI_RIGHTS_PATH_OPEN;
-    if (fd_flags & __WASI_FDFLAGS_DSYNC) {
-      required_rights |= __WASI_RIGHTS_FD_DATASYNC;
-    }
-    if (fd_flags & __WASI_FDFLAGS_SYNC) {
-      required_rights |= __WASI_RIGHTS_FD_DATASYNC;
-      required_rights |= __WASI_RIGHTS_FD_SYNC;
-    }
     if (oflags & __WASI_OFLAGS_CREAT) {
       required_rights |= __WASI_RIGHTS_PATH_CREATE_FILE;
     }

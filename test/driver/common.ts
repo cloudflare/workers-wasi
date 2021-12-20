@@ -1,9 +1,9 @@
-import { _FS } from '@cloudflare/workers-wasi'
+import { Environment, _FS } from '@cloudflare/workers-wasi'
 
 export interface ExecOptions {
   args?: string[]
   asyncify: boolean
-  env?: { [key: string]: string }
+  env?: Environment
   fs: _FS
   moduleName: string
   preopens: string[]
@@ -13,5 +13,5 @@ export interface ExecOptions {
 
 export interface ExecResult {
   stdout: string
-  status: number
+  status?: number
 }

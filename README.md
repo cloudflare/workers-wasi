@@ -72,7 +72,6 @@ Misc TODO:
 - [ ] path_rename (update old path for existing open fds)
 - [ ] fix preopens interface (use object), and update options docs
 - [ ] document difference between nodejs options and ours (streams/fs)
-- [ ] complete memfs.cc todos
 - [ ] fd_close (stdio)
 - [ ] fd_renumber (stdio)
 - [ ] fd_read/fd_write does not work with renumbering stdio

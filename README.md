@@ -44,7 +44,7 @@ docker run --rm -it -v $(pwd):/workers-wasi workers-wasi-build
 
 We aim to be interchangeable with other WASI implementations.  Integration tests are run locally using [Miniflare](https://github.com/cloudflare/miniflare) against the following test suites:
 - [x] `(52/52)` https://github.com/caspervonb/wasi-test-suite
-- [ ] `(27/42)` https://github.com/bytecodealliance/wasmtime/tree/main/crates/test-programs/wasi-tests
+- [ ] `(28/42)` https://github.com/bytecodealliance/wasmtime/tree/main/crates/test-programs/wasi-tests
 
 ## Notes
 

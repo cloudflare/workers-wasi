@@ -125,7 +125,7 @@ export class WASI {
     this.#returnOnExit = options?.returnOnExit ?? false
     this.#preopens = options?.preopens ?? []
 
-    this.#asyncify = options?.streamStdio ?? true
+    this.#asyncify = options?.streamStdio ?? false
     this.#streams = [
       fromReadableStream(options?.stdin, this.#asyncify),
       fromWritableStream(options?.stdout, this.#asyncify),
@@ -147,12 +147,18 @@ export class WASI {
     this.#memory = instance.exports.memory as WebAssembly.Memory
     this.#memfs.initialize(this.#memory)
 
-    if (this.#asyncify) {
-      this.#state.init(instance)
-    }
-
-    await Promise.all(this.#streams.map((s) => s.preRun()))
     try {
+      if (this.#asyncify) {
+        if (!instance.exports.asyncify_get_state) {
+          throw new Error(
+            "streamStdio is requested but the module is missing 'Asyncify' exports, see https://github.com/GoogleChromeLabs/asyncify"
+          )
+        }
+
+        this.#state.init(instance)
+      }
+
+      await Promise.all(this.#streams.map((s) => s.preRun()))
       if (this.#asyncify) {
         await this.#state.exports._start()
       } else {

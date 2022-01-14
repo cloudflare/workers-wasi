@@ -179,7 +179,7 @@ export class WASI {
     return undefined
   }
 
-  get wasiImports(): Record<string, Function> {
+  get wasiImport(): Record<string, Function> {
     const wrap = (f: any, self: any = this) => {
       const bound = f.bind(self)
       if (this.#asyncify) {

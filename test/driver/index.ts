@@ -22,7 +22,7 @@ const exec = async (
     streamStdio: options.asyncify,
   })
   const instance = new WebAssembly.Instance(wasm, {
-    wasi_snapshot_preview1: wasi.wasiImports,
+    wasi_snapshot_preview1: wasi.wasiImport,
   })
   const promise = wasi.start(instance)
 

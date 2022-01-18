@@ -12,9 +12,6 @@
 #include "lfs.h"
 #include "util.h"
 
-// TODO: move to state
-lfs_t lfs;
-
 void wasi_trace(int error, const char* fmt, ...) {
   char* line;
   va_list ap;
@@ -85,18 +82,6 @@ struct FileMetadata {
   __wasi_timestamp_t mtim = 100;
   __wasi_timestamp_t atim = 100;
 };
-
-FileMetadata get_metadata(const char* path) {
-  FileMetadata m = {};
-  if (lfs_getattr(&lfs, path, 1, (void*)&m, sizeof(m)) > 0) {
-    return m;
-  }
-  return {};
-}
-
-void set_metadata(const char* path, const FileMetadata& m) {
-  lfs_setattr(&lfs, path, 1, (const void*)&m, sizeof(m));
-}
 
 #define RETURN_IF_LFS_ERR(x)       \
   ({                               \
@@ -186,23 +171,8 @@ constexpr const __wasi_rights_t WASI_FD_RIGHTS =
     __WASI_RIGHTS_FD_FILESTAT_SET_TIMES;
 // clang-format on
 
-__wasi_errno_t filestat_get(const char* path, __wasi_filestat_t* result) {
-  lfs_info info{};
-  RETURN_IF_LFS_ERR(lfs_stat(&lfs, path, &info));
-
-  const auto m = get_metadata(path);
-  *result = {.dev = 0,
-             .ino = 0,
-             .filetype = from_lfs_type(info.type),
-             .nlink = 1,
-             .size = info.size,
-             .atim = m.atim,
-             .mtim = m.mtim};
-  return __WASI_ERRNO_SUCCESS;
-}
-
 struct Context {
-  // TODO: reuse free fds
+  lfs_t lfs;
   int next_fd = 2147483647;
   std::vector<std::string> preopens;
   std::unordered_map<__wasi_fd_t, std::unique_ptr<FileDescriptor>> fds;
@@ -223,6 +193,48 @@ struct Context {
       .cache_size = 16,
       .lookahead_size = 16,
   };
+
+  __wasi_fd_t allocate_fd() {
+    for (;;) {
+      const auto fd = next_fd--;
+      if (next_fd < preopens.size()) {
+        next_fd = std::numeric_limits<int32_t>::max();
+      }
+
+      if (fds.find(fd) != fds.end()) {
+        continue;
+      }
+
+      return fd;
+    }
+  }
+
+  __wasi_errno_t filestat_get(const char* path, __wasi_filestat_t* result) {
+    lfs_info info{};
+    RETURN_IF_LFS_ERR(lfs_stat(&lfs, path, &info));
+
+    const auto m = get_metadata(path);
+    *result = {.dev = 0,
+               .ino = 0,
+               .filetype = from_lfs_type(info.type),
+               .nlink = 1,
+               .size = info.size,
+               .atim = m.atim,
+               .mtim = m.mtim};
+    return __WASI_ERRNO_SUCCESS;
+  }
+
+  FileMetadata get_metadata(const char* path) {
+    FileMetadata m = {};
+    if (lfs_getattr(&lfs, path, 1, (void*)&m, sizeof(m)) > 0) {
+      return m;
+    }
+    return {};
+  }
+
+  void set_metadata(const char* path, const FileMetadata& m) {
+    lfs_setattr(&lfs, path, 1, (const void*)&m, sizeof(m));
+  }
 
   __wasi_errno_t lookup_fd(const __wasi_fd_t fd, const int type,
                            const __wasi_rights_t rights,
@@ -458,7 +470,7 @@ struct Context {
     return __WASI_ERRNO_SUCCESS;
   }
 
-  __wasi_errno_t fd_readdir(__wasi_fd_t fd, uint8_t* buf, __wasi_size_t buf_len,
+  __wasi_errno_t fd_readdir(__wasi_fd_t fd, MutableView<uint8_t>& buffer,
                             __wasi_dircookie_t cookie, __wasi_size_t* retptr0) {
     return __WASI_ERRNO_NOSYS;
   }
@@ -471,8 +483,6 @@ struct Context {
     }
     if (fds.find(to) != fds.end()) {
       RETURN_IF_WASI_ERR(fd_close(to));
-    } else {
-      // TODO: path_open should not be able to use these ids
     }
 
     REQUIRE(fds.emplace(to, std::move(iter->second)).second);
@@ -635,7 +645,7 @@ struct Context {
                         to_lfs_open_flags(oflags, desc->rights_base)));
     }
 
-    const auto new_fd = next_fd--;
+    const auto new_fd = allocate_fd();
     REQUIRE(fds.emplace(new_fd, std::move(desc)).second);
 
     auto m = get_metadata(path);
@@ -647,7 +657,7 @@ struct Context {
 
   __wasi_errno_t path_readlink(__wasi_fd_t fd,
                                const std::string_view& unresolved_path,
-                               uint8_t* buf, __wasi_size_t buf_len,
+                               std::span<uint8_t> result,
                                __wasi_size_t* retptr0) {
     return __WASI_ERRNO_NOSYS;
   }
@@ -770,7 +780,7 @@ struct Context {
     return __WASI_ERRNO_SUCCESS;
   }
 
-  bool is_regular_file(const char* path) const {
+  bool is_regular_file(const char* path) {
     lfs_info info{};
     return lfs_stat(&lfs, path, &info) == LFS_ERR_OK &&
            info.type == LFS_TYPE_REG;
@@ -931,11 +941,10 @@ int32_t EXPORT(fd_read)(int32_t arg0, int32_t arg1, int32_t arg2,
 
 int32_t EXPORT(fd_readdir)(int32_t arg0, int32_t arg1, int32_t arg2,
                            int64_t arg3, int32_t arg4) {
-  // TODO: copy in external buffer
   CallFrame frame;
-  MutableView<__wasi_size_t> out(frame, arg4);
-  return state.fd_readdir(arg0, reinterpret_cast<uint8_t*>(arg1), arg2, arg3,
-                          &out.get());
+  MutableView<uint8_t> out1(frame, arg1, arg2);
+  MutableView<__wasi_size_t> out2(frame, arg4);
+  return state.fd_readdir(arg0, out1, arg3, &out2.get());
 }
 
 int32_t EXPORT(fd_renumber)(int32_t arg0, int32_t arg1) {
@@ -1008,12 +1017,11 @@ int32_t EXPORT(path_open)(int32_t arg0, int32_t arg1, int32_t arg2,
 
 int32_t EXPORT(path_readlink)(int32_t arg0, int32_t arg1, int32_t arg2,
                               int32_t arg3, int32_t arg4, int32_t arg5) {
-  // TODO: copy in external buffer
   CallFrame frame;
-  MutableView<__wasi_size_t> out(frame, arg5);
-  return state.path_readlink(arg0, frame.ref_string(arg1, arg2),
-                             reinterpret_cast<uint8_t*>(arg3), arg4,
-                             &out.get());
+  MutableView<uint8_t> out1(frame, arg3, arg4);
+  MutableView<__wasi_size_t> out2(frame, arg5);
+  return state.path_readlink(arg0, frame.ref_string(arg1, arg2), out1.value,
+                             &out2.get());
 }
 
 int32_t EXPORT(path_remove_directory)(int32_t arg0, int32_t arg1,
@@ -1064,12 +1072,12 @@ void mkdirp(const char* path) {
   auto* copy = strdup(path);
   const char* parent = dirname(copy);
   if (!strcmp(parent, path)) {
-    lfs_mkdir(&lfs, parent);
+    lfs_mkdir(&state.lfs, parent);
     return;
   }
 
   mkdirp(parent);
-  lfs_mkdir(&lfs, parent);
+  lfs_mkdir(&state.lfs, parent);
   free(copy);
 }
 
@@ -1103,11 +1111,11 @@ int32_t EXPORT(initialize_internal)(int32_t arg0, int32_t arg1) {
     mkdirp(path);
 
     lfs_file_t file;
-    LFS_REQUIRE(lfs_file_open(&lfs, &file, path,
+    LFS_REQUIRE(lfs_file_open(&state.lfs, &file, path,
                               LFS_O_WRONLY | LFS_O_CREAT | LFS_O_EXCL));
-    LFS_REQUIRE(lfs_file_write(&lfs, &file, m.value.GetString(),
+    LFS_REQUIRE(lfs_file_write(&state.lfs, &file, m.value.GetString(),
                                m.value.GetStringLength()));
-    LFS_REQUIRE(lfs_file_close(&lfs, &file));
+    LFS_REQUIRE(lfs_file_close(&state.lfs, &file));
   }
 
   REQUIRE(state.fds.emplace(0, make_stream_fd(__WASI_RIGHTS_FD_READ)).second);
@@ -1119,7 +1127,7 @@ int32_t EXPORT(initialize_internal)(int32_t arg0, int32_t arg1) {
 
 int main() {
   LFS_REQUIRE(lfs_rambd_create(&state.cfg));
-  LFS_REQUIRE(lfs_format(&lfs, &state.cfg));
-  LFS_REQUIRE(lfs_mount(&lfs, &state.cfg));
+  LFS_REQUIRE(lfs_format(&state.lfs, &state.cfg));
+  LFS_REQUIRE(lfs_mount(&state.lfs, &state.cfg));
   return 0;
 }

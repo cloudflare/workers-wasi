@@ -49,7 +49,7 @@ export interface WASIOptions {
    * @defaultValue `{}`
    *
    */
-  env?: { [key: string]: string }
+  env?: Environment
 
   /**
    * By default WASI applications that call `proc_exit` will throw a {@link ProcessExit} exception, setting this option to true will cause {@link WASI.start} to return the the exit code instead.

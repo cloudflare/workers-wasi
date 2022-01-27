@@ -7,7 +7,7 @@ An experimental implementation of the WebAssembly System Interface designed to r
 ## Usage
 
 ```typescript
-import { WASI } from 'workers-wasi';
+import { WASI } from '@cloudflare/workers-wasi';
 import mywasm from './mywasm.wasm';
 
 const wasi = new WASI();

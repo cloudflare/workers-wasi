@@ -1,6 +1,6 @@
 {
   "name": "@cloudflare/workers-wasi",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "main": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "repository": "github:cloudflare/workers-wasi",

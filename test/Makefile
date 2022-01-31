@@ -32,7 +32,7 @@ BUNDLE := $(OUTPUT_DIR)/index.mjs
 MEMFS_SRC  := ../dist/memfs.wasm
 MEMFS_DST  := $(OUTPUT_DIR)/memfs.wasm
 
-node_modules: ./package.json ./package-lock.json
+node_modules: ./package.json ./package-lock.json ../package.json
 	npm install --no-audit --no-fund --no-progress --quiet
 	touch $@
 

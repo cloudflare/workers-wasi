@@ -27,4 +27,8 @@ jobs:
         name: Test Report
         path: ./build/test/junit.xml
         reporter: jest-junit
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cloudflare-workers-wasi.tgz
+        path: ./build/cloudflare-workers-wasi-*.tgz
 

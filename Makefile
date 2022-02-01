@@ -4,6 +4,7 @@
 all: dist/index.mjs
 
 ci: test
+	npm pack --pack-destination ./build --quiet
 	@git diff --exit-code HEAD # error on unexpected changes, eg. out of date package-lock.json
 
 test: all

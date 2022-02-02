@@ -125,6 +125,7 @@ class SyncWritableStreamAdapter
 {
   #writer: WritableStreamDefaultWriter
   #chunks: Array<Uint8Array> = []
+  #totalSize: number = 0
 
   constructor(writer: WritableStreamDefaultWriter) {
     super()
@@ -138,16 +139,24 @@ class SyncWritableStreamAdapter
         continue
       }
 
-      this.#chunks.push(iov.slice())
+      const slice = iov.slice()
+      this.#chunks.push(slice)
+      this.#totalSize += slice.byteLength
       written += iov.byteLength
     }
     return written
   }
 
   async postRun(): Promise<void> {
+    const buffer = new Uint8Array(this.#totalSize)
+    let offset = 0
+
     for (const chunk of this.#chunks) {
-      await this.#writer.write(chunk)
+      buffer.set(chunk, offset)
+      offset += chunk.byteLength
     }
+
+    await this.#writer.write(buffer)
     await this.#writer.close()
   }
 }
@@ -175,20 +184,22 @@ class SyncReadableStreamAdapter
 
   async preRun(): Promise<void> {
     const pending: Array<Uint8Array> = []
+    let length = 0
+
     for (;;) {
       const result = await this.#reader.read()
       if (result.done) {
         break
       }
-      pending.push(new Uint8Array(result.value))
+
+      const data = result.value
+      pending.push(data)
+      length += data.length
     }
-    let length = 0
-    pending.forEach((item) => {
-      length += item.length
-    })
 
     let result = new Uint8Array(length)
     let offset = 0
+
     pending.forEach((item) => {
       result.set(item, offset)
       offset += item.length

@@ -124,8 +124,8 @@ class SyncWritableStreamAdapter
   implements FileDescriptor
 {
   #writer: WritableStreamDefaultWriter
-  #chunks: Array<Uint8Array> = []
-  #totalSize: number = 0
+  #buffer: Uint8Array = new Uint8Array(4096)
+  #bytesWritten: number = 0
 
   constructor(writer: WritableStreamDefaultWriter) {
     super()
@@ -139,24 +139,23 @@ class SyncWritableStreamAdapter
         continue
       }
 
-      const slice = iov.slice()
-      this.#chunks.push(slice)
-      this.#totalSize += slice.byteLength
+      // Check if we're about to overflow the buffer and resize if need be.
+      if (this.#bytesWritten + iov.byteLength > this.#buffer.byteLength) {
+        const oldBuffer = this.#buffer
+        this.#buffer = new Uint8Array(this.#buffer.length * 2)
+        this.#buffer.set(oldBuffer)
+      }
+
+      this.#buffer.set(iov, this.#bytesWritten)
       written += iov.byteLength
+      this.#bytesWritten += iov.byteLength
     }
     return written
   }
 
   async postRun(): Promise<void> {
-    const buffer = new Uint8Array(this.#totalSize)
-    let offset = 0
-
-    for (const chunk of this.#chunks) {
-      buffer.set(chunk, offset)
-      offset += chunk.byteLength
-    }
-
-    await this.#writer.write(buffer)
+    const slice = this.#buffer.slice(0, this.#bytesWritten)
+    await this.#writer.write(slice)
     await this.#writer.close()
   }
 }

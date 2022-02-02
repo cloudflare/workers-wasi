@@ -22,12 +22,13 @@ jobs:
       run: docker run --rm -v $(pwd):/workers-wasi workers-wasi-build make -j ci
     - name: Test Report
       uses: dorny/test-reporter@v1
-      if: success() || failure()
+      if: (success() || failure()) && github.event.pull_request.head.repo.full_name == github.repository
       with:
         name: Test Report
         path: ./build/test/junit.xml
         reporter: jest-junit
     - uses: actions/upload-artifact@v2
+      if: github.event.pull_request.head.repo.full_name == github.repository
       with:
         name: cloudflare-workers-wasi.tgz
         path: ./build/cloudflare-workers-wasi-*.tgz

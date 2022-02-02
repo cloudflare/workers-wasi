@@ -154,7 +154,7 @@ class SyncWritableStreamAdapter
   }
 
   async postRun(): Promise<void> {
-    const slice = this.#buffer.slice(0, this.#bytesWritten)
+    const slice = this.#buffer.subarray(0, this.#bytesWritten)
     await this.#writer.write(slice)
     await this.#writer.close()
   }

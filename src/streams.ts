@@ -124,7 +124,8 @@ class SyncWritableStreamAdapter
   implements FileDescriptor
 {
   #writer: WritableStreamDefaultWriter
-  #chunks: Array<Uint8Array> = []
+  #buffer: Uint8Array = new Uint8Array(4096)
+  #bytesWritten: number = 0
 
   constructor(writer: WritableStreamDefaultWriter) {
     super()
@@ -138,16 +139,23 @@ class SyncWritableStreamAdapter
         continue
       }
 
-      this.#chunks.push(iov.slice())
+      // Check if we're about to overflow the buffer and resize if need be.
+      if (this.#bytesWritten + iov.byteLength > this.#buffer.byteLength) {
+        const oldBuffer = this.#buffer
+        this.#buffer = new Uint8Array(this.#buffer.length * 2)
+        this.#buffer.set(oldBuffer)
+      }
+
+      this.#buffer.set(iov, this.#bytesWritten)
       written += iov.byteLength
+      this.#bytesWritten += iov.byteLength
     }
     return written
   }
 
   async postRun(): Promise<void> {
-    for (const chunk of this.#chunks) {
-      await this.#writer.write(chunk)
-    }
+    const slice = this.#buffer.subarray(0, this.#bytesWritten)
+    await this.#writer.write(slice)
     await this.#writer.close()
   }
 }
@@ -175,20 +183,22 @@ class SyncReadableStreamAdapter
 
   async preRun(): Promise<void> {
     const pending: Array<Uint8Array> = []
+    let length = 0
+
     for (;;) {
       const result = await this.#reader.read()
       if (result.done) {
         break
       }
-      pending.push(new Uint8Array(result.value))
+
+      const data = result.value
+      pending.push(data)
+      length += data.length
     }
-    let length = 0
-    pending.forEach((item) => {
-      length += item.length
-    })
 
     let result = new Uint8Array(length)
     let offset = 0
+
     pending.forEach((item) => {
       result.set(item, offset)
       offset += item.length

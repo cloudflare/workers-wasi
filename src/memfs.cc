@@ -297,6 +297,11 @@ struct Context {
   __wasi_errno_t fd_close(__wasi_fd_t fd) {
     RETURN_IF_WASI_ERR(require_not_preopen(fd));
 
+    // TODO: We should flush here vs after execution ends and error on multiple close
+    if (fd < 3) {
+      return __WASI_ERRNO_SUCCESS;
+    }
+
     auto& desc = REQUIRE_FD(fd, __wasi_rights_t{0});
 
     if (desc.type == LFS_TYPE_DIR) {

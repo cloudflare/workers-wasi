@@ -49,34 +49,25 @@ class AsyncReadableStreamAdapter
 
   async readv(iovs: Array<Uint8Array>): Promise<number> {
     let read = 0
-    for (const buffer of iovs) {
-      let expected = buffer.byteLength
-      read += this.consumeInto(buffer, read)
-      while (read < expected) {
-        const result = await this.#reader.read()
-        if (result.done) {
-          return read
+    for (let iov of iovs) {
+      while (iov.byteLength > 0) {
+        // pull only if pending queue is empty
+        if (this.#pending.byteLength === 0) {
+          const result = await this.#reader.read()
+          if (result.done) {
+            return read
+          }
+          this.#pending = result.value
         }
-        this.#pending = new Uint8Array(result.value)
-        read += this.consumeInto(buffer, read)
-        break
+        const bytes = Math.min(iov.byteLength, this.#pending.byteLength)
+        iov.set(this.#pending!.subarray(0, bytes))
+        this.#pending = this.#pending!.subarray(bytes)
+        read += bytes
+
+        iov = iov.subarray(bytes)
       }
     }
     return read
-  }
-
-  private consumeInto(buffer: Uint8Array, offset: number): number {
-    if (!this.#pending.byteLength) {
-      return 0
-    }
-
-    const bytesToConsume = Math.min(
-      buffer.byteLength - offset,
-      this.#pending.byteLength
-    )
-    buffer.set(this.#pending.slice(0, bytesToConsume), offset)
-    this.#pending = this.#pending.slice(bytesToConsume)
-    return bytesToConsume
   }
 }
 
@@ -140,9 +131,15 @@ class SyncWritableStreamAdapter
       }
 
       // Check if we're about to overflow the buffer and resize if need be.
-      if (this.#bytesWritten + iov.byteLength > this.#buffer.byteLength) {
+      const requiredCapacity = this.#bytesWritten + iov.byteLength
+      if (requiredCapacity > this.#buffer.byteLength) {
+        let desiredCapacity = this.#buffer.byteLength
+        while (desiredCapacity < requiredCapacity) {
+          desiredCapacity *= 1.5;
+        }
+
         const oldBuffer = this.#buffer
-        this.#buffer = new Uint8Array(this.#buffer.length * 2)
+        this.#buffer = new Uint8Array(desiredCapacity)
         this.#buffer.set(oldBuffer)
       }
 
@@ -174,9 +171,14 @@ class SyncReadableStreamAdapter
 
   readv(iovs: Array<Uint8Array>): number {
     let read = 0
-    for (const buffer of iovs) {
-      let expected = buffer.byteLength
-      read += this.consumeInto(buffer, read)
+    for (const iov of iovs) {
+      const bytes = Math.min(iov.byteLength, this.#buffer!.byteLength)
+      if (bytes <= 0) {
+        break;
+      }
+      iov.set(this.#buffer!.subarray(0, bytes))
+      this.#buffer = this.#buffer!.subarray(bytes)
+      read += bytes
     }
     return read
   }
@@ -205,20 +207,6 @@ class SyncReadableStreamAdapter
     })
 
     this.#buffer = result
-  }
-
-  private consumeInto(buffer: Uint8Array, offset: number): number {
-    if (!this.#buffer!.byteLength) {
-      return 0
-    }
-
-    const bytesToConsume = Math.min(
-      buffer.byteLength - offset,
-      this.#buffer!.byteLength
-    )
-    buffer.set(this.#buffer!.slice(0, bytesToConsume), offset)
-    this.#buffer = this.#buffer!.slice(bytesToConsume)
-    return bytesToConsume
   }
 }
 

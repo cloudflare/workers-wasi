@@ -1,8 +1,4 @@
 import * as child from 'node:child_process'
-import * as utils from 'node:util'
-
-import { jest } from '@jest/globals'
-
 import type { ExecOptions } from './common'
 
 // @ts-ignore the file might not always exist, so we'll just supress any errors.

@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "emitDeclarationOnly": false,
+    "skipLibCheck": true,
+    "lib": ["ESNext", "DOM"],
+    "module": "commonjs",
+    "types": ["@cloudflare/workers-types", "@types/node", "@types/jest"]
+  },
+  "include": ["**/*.ts"]
+}

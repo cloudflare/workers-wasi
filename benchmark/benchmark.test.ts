@@ -39,10 +39,7 @@ for (const moduleName of Object.keys(ModuleTable)) {
       }
     )
 
-    // let stdout = ''
     let stderr = ''
-
-    // proc.stdout?.on('data', (data) => (stdout += data))
     proc.stderr?.on('data', (data) => (stderr += data))
 
     const exitCode = await new Promise((resolve) => proc.once('exit', resolve))

@@ -1,8 +1,8 @@
 import * as child from 'node:child_process'
-import type { ExecOptions } from './common'
+import type { ExecOptions } from './driver/common'
 
 // @ts-ignore the file might not always exist, so we'll just supress any errors.
-import { ModuleTable } from '../build/benchmark/wasm-table'
+import { ModuleTable } from '../build/test/benchmark-wasm-table'
 
 for (const moduleName of Object.keys(ModuleTable)) {
   const prettyName = moduleName.split('/').pop()
@@ -24,9 +24,9 @@ for (const moduleName of Object.keys(ModuleTable)) {
       [
         '--experimental-vm-modules',
         '--cpu-prof',
-        '--cpu-prof-dir=../build/benchmark/prof',
+        '--cpu-prof-dir=../build/test/prof',
         `--cpu-prof-name=${moduleName}.${Date.now()}.cpuprofile`,
-        '../build/benchmark/index.mjs',
+        '../build/test/standalone.mjs',
         moduleName,
         JSON.stringify(execOptions),
       ],

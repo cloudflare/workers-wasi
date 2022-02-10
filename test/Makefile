@@ -1,6 +1,8 @@
 default: run-tests
 
 WASM_OPT   := ../build/binaryen/bin/wasm-opt
+WASI_SDK_PATH := ../deps/wasi-sdk-13.0
+WASI_SYSROOT  := $(abspath ${WASI_SDK_PATH}/share/wasi-sysroot)
 OUTPUT_DIR := ../build/test
 
 # https://github.com/caspervonb/wasi-test-suite
@@ -21,6 +23,11 @@ WASMTIME_DST := $(OUTPUT_DIR)/wasmtime
 WASMTIME_SRC_TESTS := $(shell ls $(WASI_TESTS_CRATE_PATH)/src/bin/*.rs)
 WASMTIME_DST_TESTS := $(WASMTIME_SRC_TESTS:$(WASMTIME_SRC)/%.rs=$(WASMTIME_DST)/%.wasm)
 
+BENCHMARK_SRC := ./subjects
+BENCHMARK_DST := $(OUTPUT_DIR)/benchmark
+BENCHMARK_SRC_TESTS := $(shell ls ./subjects/*.c)
+BENCHMARK_DST_TESTS := $(BENCHMARK_SRC_TESTS:$(BENCHMARK_SRC)/%.c=$(BENCHMARK_DST)/%.wasm)
+
 $(WASMTIME_BIN)/%.wasm: $(wildcard $(WASI_TESTS_CRATE_PATH)/src/**)
 	cargo build --bin $* --target wasm32-wasi --manifest-path $(WASI_TESTS_CRATE_PATH)/Cargo.toml
 
@@ -36,22 +43,29 @@ node_modules: ./package.json ./package-lock.json ../package.json
 	npm install --no-audit --no-fund --no-progress --quiet
 	touch $@
 
-run-tests: $(BUNDLE) $(WASI_TEST_SUITE_DST_TESTS) $(WASMTIME_DST_TESTS) $(OUTPUT_DIR)/wasm-table.ts node_modules
+$(OUTPUT_DIR)/standalone.mjs: $(OUTPUT_DIR)/benchmark-wasm-table.ts node_modules
+	node benchmark-build.mjs
+
+run-tests: $(BUNDLE) $(WASI_TEST_SUITE_DST_TESTS) $(WASMTIME_DST_TESTS) $(OUTPUT_DIR)/test-wasm-table.ts $(OUTPUT_DIR)/benchmark-wasm-table.ts node_modules $(OUTPUT_DIR)/standalone.mjs
 	$(shell npm bin)/tsc -p ./tsconfig.json
 	JEST_JUNIT_OUTPUT_DIR=$(OUTPUT_DIR) NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 \
         $(shell npm bin)/jest --detectOpenHandles -i
 
-$(OUTPUT_DIR)/wasm-table.ts: $(WASI_TEST_SUITE_DST_TESTS) $(WASMTIME_DST_TESTS)
+$(OUTPUT_DIR)/test-wasm-table.ts: $(WASI_TEST_SUITE_DST_TESTS) $(WASMTIME_DST_TESTS)
 	mkdir -p $(@D)
-	node ./generate-wasm-table.mjs $(OUTPUT_DIR) > $@
+	node ./wasm-table/test-wasm-table.mjs $(OUTPUT_DIR) > $@
+
+$(OUTPUT_DIR)/benchmark-wasm-table.ts: $(BENCHMARK_DST_TESTS)
+	mkdir -p $(@D)
+	node ./wasm-table/benchmark-wasm-table.mjs $(OUTPUT_DIR) > $@
 
 $(MEMFS_DST): $(MEMFS_SRC)
 	mkdir -p $(@D)
 	cp $< $@
 
-$(BUNDLE): $(wildcard ../dist/**) $(wildcard ./driver/**) $(MEMFS_DST) $(OUTPUT_DIR)/wasm-table.ts node_modules
+$(BUNDLE): $(wildcard ../dist/**) $(wildcard ./driver/**) $(MEMFS_DST) $(OUTPUT_DIR)/test-wasm-table.ts node_modules
 	mkdir -p $(@D)
-	$(shell npm bin)/esbuild --bundle ./driver/index.ts --outfile=$@ --format=esm --log-level=warning --external:*.wasm
+	$(shell npm bin)/esbuild --bundle ./driver/worker.ts --outfile=$@ --format=esm --log-level=warning --external:*.wasm
 
 $(WASM_OPT):
 	@$(call color,"downloading binaryen")
@@ -60,3 +74,19 @@ $(WASM_OPT):
 	echo '9057c8f3f0bbfec47a95985c8f0faad8cc2aa3932e94a7d6b705e245ed140e19  binaryen.tar.gz' | sha256sum -c
 	tar zxvf binaryen.tar.gz --strip-components=1 --touch -C ../build/binaryen
 	rm binaryen.tar.gz
+
+export WASI_CC      := $(abspath ${WASI_SDK_PATH}/bin/clang) -target wasm32-wasi --sysroot=${WASI_SYSROOT}
+export WASI_CFLAGS  := -Oz -flto
+export WASI_LDFLAGS := -flto -Wl,--allow-undefined
+
+$(WASI_SDK_PATH):
+	mkdir -p $(@D)
+	curl -sLo wasi-sdk.tar.gz https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-13/wasi-sdk-13.0-linux.tar.gz
+	echo 'aea04267dd864a2f41e21f6cc43591b73dd8901e1ad4e87decf8c4b5905c73cf wasi-sdk.tar.gz' | sha256sum -c
+	tar zxf wasi-sdk.tar.gz --touch -C deps
+	rm wasi-sdk.tar.gz
+
+$(BENCHMARK_DST)/%.wasm: $(WASI_SDK_PATH) $(WASM_OPT)
+	mkdir -p $(BENCHMARK_DST)
+	$(WASI_CC) $(WASI_CFLAGS) $(WASI_LDFLAGS) subjects/$*.c -o $(BENCHMARK_DST)/$*.wasm 
+	$(WASM_OPT) -g -O --asyncify $(BENCHMARK_DST)/$*.wasm -o $(BENCHMARK_DST)/$*.asyncify.wasm

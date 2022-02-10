@@ -2,7 +2,7 @@
 import * as esbuild from 'esbuild'
 import * as path from 'path'
 
-const OUT_DIR = '../build/benchmark/'
+const OUT_DIR = '../build/test/'
 
 /**
  * Node currently can't import wasm files in the way that we do with Workers, it either throws an
@@ -34,10 +34,10 @@ const wasmLoaderPlugin = {
 
 esbuild.build({
   bundle: true,
-  outfile: path.join(OUT_DIR, 'index.mjs'),
+  outfile: path.join(OUT_DIR, 'standalone.mjs'),
   format: 'esm',
   logLevel: 'warning',
-  entryPoints: ['./index.ts'],
+  entryPoints: ['./driver/standalone.ts'],
   plugins: [wasmLoaderPlugin],
   platform: 'node',
 })

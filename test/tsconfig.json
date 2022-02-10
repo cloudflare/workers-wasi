@@ -2,17 +2,10 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "noEmit": true,
-    "emitDeclarationOnly":false,
+    "emitDeclarationOnly": false,
     "skipLibCheck": true,
     "lib": ["ESNext", "DOM"],
-    "types": [
-      "@cloudflare/workers-types",
-      "@types/node",
-      "@types/jest"
-    ]
+    "types": ["@cloudflare/workers-types", "@types/node", "@types/jest"]
   },
-  "include": [
-    "**/*.ts"
-  ]
+  "include": ["**/*.ts"]
 }
-

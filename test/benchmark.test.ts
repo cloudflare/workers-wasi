@@ -1,10 +1,12 @@
 import * as child from 'node:child_process'
+import * as fs from 'node:fs'
 import type { ExecOptions } from './driver/common'
 
-// @ts-ignore the file might not always exist, so we'll just supress any errors.
-import { ModuleTable } from '../build/test/benchmark-wasm-table'
+const moduleNames = fs
+  .readdirSync(`${process.env.OUTPUT_DIR}/benchmark`)
+  .map((dirent) => `benchmark/${dirent}`)
 
-for (const moduleName of Object.keys(ModuleTable)) {
+for (const moduleName of moduleNames) {
   const prettyName = moduleName.split('/').pop()
   if (!prettyName) throw new Error('unreachable')
 

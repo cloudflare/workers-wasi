@@ -79,7 +79,7 @@ export WASI_CC      := $(abspath ${WASI_SDK_PATH}/bin/clang) -target wasm32-wasi
 export WASI_CFLAGS  := -Oz -flto
 export WASI_LDFLAGS := -flto -Wl,--allow-undefined
 
-$(BENCHMARK_DST)/%.wasm: $(WASI_SDK_PATH) $(WASM_OPT)
+$(BENCHMARK_DST)/%.wasm: $(WASI_SDK_PATH) $(WASM_OPT) $(wildcard $(BENCHMARK_SRC)/*.c)
 	mkdir -p $(BENCHMARK_DST)
 	$(WASI_CC) $(WASI_CFLAGS) $(WASI_LDFLAGS) subjects/$*.c -o $(BENCHMARK_DST)/$*.wasm 
 	$(WASM_OPT) -g -O --asyncify $(BENCHMARK_DST)/$*.wasm -o $(BENCHMARK_DST)/$*.asyncify.wasm

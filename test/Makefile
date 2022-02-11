@@ -46,7 +46,7 @@ node_modules: ./package.json ./package-lock.json ../package.json
 $(OUTPUT_DIR)/standalone.mjs: $(OUTPUT_DIR)/benchmark-wasm-table.ts node_modules
 	node benchmark-build.mjs
 
-run-tests: $(BUNDLE) $(WASI_TEST_SUITE_DST_TESTS) $(WASMTIME_DST_TESTS) $(OUTPUT_DIR)/test-wasm-table.ts $(OUTPUT_DIR)/benchmark-wasm-table.ts node_modules $(OUTPUT_DIR)/standalone.mjs
+run-tests: $(BUNDLE) $(OUTPUT_DIR)/test-wasm-table.ts $(OUTPUT_DIR)/benchmark-wasm-table.ts node_modules $(OUTPUT_DIR)/standalone.mjs
 	$(shell npm bin)/tsc -p ./tsconfig.json
 	JEST_JUNIT_OUTPUT_DIR=$(OUTPUT_DIR) OUTPUT_DIR=$(OUTPUT_DIR) NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 \
         $(shell npm bin)/jest --detectOpenHandles -i

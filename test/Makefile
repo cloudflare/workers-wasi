@@ -79,13 +79,6 @@ export WASI_CC      := $(abspath ${WASI_SDK_PATH}/bin/clang) -target wasm32-wasi
 export WASI_CFLAGS  := -Oz -flto
 export WASI_LDFLAGS := -flto -Wl,--allow-undefined
 
-$(WASI_SDK_PATH):
-	mkdir -p $(@D)
-	curl -sLo wasi-sdk.tar.gz https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-13/wasi-sdk-13.0-linux.tar.gz
-	echo 'aea04267dd864a2f41e21f6cc43591b73dd8901e1ad4e87decf8c4b5905c73cf wasi-sdk.tar.gz' | sha256sum -c
-	tar zxf wasi-sdk.tar.gz --touch -C deps
-	rm wasi-sdk.tar.gz
-
 $(BENCHMARK_DST)/%.wasm: $(WASI_SDK_PATH) $(WASM_OPT)
 	mkdir -p $(BENCHMARK_DST)
 	$(WASI_CC) $(WASI_CFLAGS) $(WASI_LDFLAGS) subjects/$*.c -o $(BENCHMARK_DST)/$*.wasm 

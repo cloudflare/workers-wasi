@@ -43,7 +43,7 @@ node_modules: ./package.json ./package-lock.json ../package.json
 	npm install --no-audit --no-fund --no-progress --quiet
 	touch $@
 
-$(OUTPUT_DIR)/standalone.mjs: $(BENCHMARK_DST_TESTS) node_modules
+$(OUTPUT_DIR)/standalone.mjs: $(BENCHMARK_DST_TESTS) node_modules ./driver/*.ts
 	node benchmark-build.mjs
 
 run-tests: $(BUNDLE) $(OUTPUT_DIR)/wasm-table.ts node_modules $(OUTPUT_DIR)/standalone.mjs

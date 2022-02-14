@@ -1,4 +1,4 @@
-import { ModuleTable } from '../../build/test/test-wasm-table'
+import { ModuleTable } from '../../build/test/wasm-table'
 import { ExecOptions, exec } from './common'
 
 export default {

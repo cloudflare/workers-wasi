@@ -1,11 +1,14 @@
-import { ModuleTable } from '../../build/test/benchmark-wasm-table'
-import { exec, ExecOptions } from './common'
+import * as fs from 'node:fs/promises'
+import { exec } from './common'
 
-const [moduleName, rawOptions] = process.argv.slice(2)
+const [modulePath, rawOptions] = process.argv.slice(2)
 const options = JSON.parse(rawOptions)
 
-exec(options, ModuleTable[moduleName]).then((result) => {
-  console.log(result.stdout)
-  console.error(result.stderr)
-  process.exit(result.status)
-})
+fs.readFile(modulePath)
+  .then((wasmBytes) => new WebAssembly.Module(wasmBytes))
+  .then((wasmModule) => exec(options, wasmModule))
+  .then((result) => {
+    console.log(result.stdout)
+    console.error(result.stderr)
+    process.exit(result.status)
+  })

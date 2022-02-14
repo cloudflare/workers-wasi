@@ -43,27 +43,23 @@ node_modules: ./package.json ./package-lock.json ../package.json
 	npm install --no-audit --no-fund --no-progress --quiet
 	touch $@
 
-$(OUTPUT_DIR)/standalone.mjs: $(OUTPUT_DIR)/benchmark-wasm-table.ts node_modules
+$(OUTPUT_DIR)/standalone.mjs: $(BENCHMARK_DST_TESTS) node_modules
 	node benchmark-build.mjs
 
-run-tests: $(BUNDLE) $(OUTPUT_DIR)/test-wasm-table.ts $(OUTPUT_DIR)/benchmark-wasm-table.ts node_modules $(OUTPUT_DIR)/standalone.mjs
+run-tests: $(BUNDLE) $(OUTPUT_DIR)/wasm-table.ts node_modules $(OUTPUT_DIR)/standalone.mjs
 	$(shell npm bin)/tsc -p ./tsconfig.json
 	JEST_JUNIT_OUTPUT_DIR=$(OUTPUT_DIR) OUTPUT_DIR=$(OUTPUT_DIR) NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 \
         $(shell npm bin)/jest --detectOpenHandles -i
 
-$(OUTPUT_DIR)/test-wasm-table.ts: $(WASI_TEST_SUITE_DST_TESTS) $(WASMTIME_DST_TESTS)
+$(OUTPUT_DIR)/wasm-table.ts: $(WASI_TEST_SUITE_DST_TESTS) $(WASMTIME_DST_TESTS)
 	mkdir -p $(@D)
-	node ./wasm-table/test-wasm-table.mjs $(OUTPUT_DIR) > $@
-
-$(OUTPUT_DIR)/benchmark-wasm-table.ts: $(BENCHMARK_DST_TESTS)
-	mkdir -p $(@D)
-	node ./wasm-table/benchmark-wasm-table.mjs $(OUTPUT_DIR) > $@
+	node ./generate-wasm-table.mjs $(OUTPUT_DIR) > $@
 
 $(MEMFS_DST): $(MEMFS_SRC)
 	mkdir -p $(@D)
 	cp $< $@
 
-$(BUNDLE): $(wildcard ../dist/**) $(wildcard ./driver/**) $(MEMFS_DST) $(OUTPUT_DIR)/test-wasm-table.ts node_modules
+$(BUNDLE): $(wildcard ../dist/**) $(wildcard ./driver/**) $(MEMFS_DST) $(OUTPUT_DIR)/wasm-table.ts node_modules
 	mkdir -p $(@D)
 	$(shell npm bin)/esbuild --bundle ./driver/worker.ts --outfile=$@ --format=esm --log-level=warning --external:*.wasm
 

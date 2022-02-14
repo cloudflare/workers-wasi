@@ -1,18 +1,21 @@
 import * as child from 'node:child_process'
 import * as fs from 'node:fs'
+import { cwd } from 'node:process'
+import path from 'path/posix'
 import type { ExecOptions } from './driver/common'
 
+const { OUTPUT_DIR } = process.env
 const moduleNames = fs
-  .readdirSync(`${process.env.OUTPUT_DIR}/benchmark`)
+  .readdirSync(`${OUTPUT_DIR}/benchmark`)
   .map((dirent) => `benchmark/${dirent}`)
 
-for (const moduleName of moduleNames) {
-  const prettyName = moduleName.split('/').pop()
+for (const modulePath of moduleNames) {
+  const prettyName = modulePath.split('/').pop()
   if (!prettyName) throw new Error('unreachable')
 
   test(`${prettyName}`, async () => {
     const execOptions: ExecOptions = {
-      moduleName,
+      moduleName: prettyName,
       asyncify: prettyName.endsWith('.asyncify.wasm'),
       fs: {},
       preopens: [],
@@ -26,14 +29,15 @@ for (const moduleName of moduleNames) {
       [
         '--experimental-vm-modules',
         '--cpu-prof',
-        '--cpu-prof-dir=../build/test/prof',
-        `--cpu-prof-name=${moduleName}.${Date.now()}.cpuprofile`,
-        '../build/test/standalone.mjs',
-        moduleName,
+        '--cpu-prof-dir=./prof',
+        `--cpu-prof-name=${prettyName}.${Date.now()}.cpuprofile`,
+        'standalone.mjs',
+        modulePath,
         JSON.stringify(execOptions),
       ],
       {
         encoding: 'utf8',
+        cwd: OUTPUT_DIR,
       }
     )
 

@@ -4,6 +4,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^3.2.0",
     "@types/jest": "^27.0.2",
+    "@types/node": "^17.0.16",
     "esbuild": "^0.13.13",
     "jest": "^27.3.1",
     "jest-junit": "^13.0.0",
@@ -19,7 +20,10 @@
     "extensionsToTreatAsEsm": [
       ".ts"
     ],
-    "reporters": [ "default", "jest-junit" ],
+    "reporters": [
+      "default",
+      "jest-junit"
+    ],
     "verbose": true,
     "testRegex": "/.*\\.test\\.ts$",
     "transform": {

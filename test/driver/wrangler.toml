@@ -17,4 +17,3 @@ dir = "../../build/test/"
 [[build.upload.rules]]
 type = "CompiledWasm"
 globs = ["**/*.wasm"]
-

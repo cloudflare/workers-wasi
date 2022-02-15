@@ -1,7 +1,5 @@
-// generate a table with explicit imports since we can't dynamically load
-// WebAssembly modules in our worker
-import path from 'path'
-import fs from 'fs/promises'
+import * as path from 'path'
+import * as fs from 'fs/promises'
 
 const recurseFiles = async (dir) => {
   const entries = await fs.readdir(dir, { withFileTypes: true })
@@ -21,19 +19,24 @@ const recurseFiles = async (dir) => {
   ).flat()
 }
 
-
 const dir = path.resolve(process.argv[2])
-const files = (await recurseFiles(dir)).map(f => path.join('./', f.substr(dir.length)))
+const files = (await recurseFiles(dir)).map((f) =>
+  path.join('./', f.substr(dir.length))
+)
+
 for (const file of files) {
   console.log('// @ts-ignore')
-  const identifier = file.replace(/[-\/\.]/g, "_")
+  const identifier = file.replace(/[-\/\.]/g, '_')
   console.log(`import ${identifier} from '${file}'`)
 }
 console.log()
 
-console.log('export const ModuleTable: { [key: string]: WebAssembly.Module } = {')
+console.log(
+  'export const ModuleTable: { [key: string]: WebAssembly.Module } = {'
+)
 for (const file of files) {
-  const identifier = file.replace(/[-\/\.]/g, "_")
+  const identifier = file.replace(/[-\/\.]/g, '_')
   console.log(`  '${file}': ${identifier},`)
 }
+
 console.log('}')

@@ -16,8 +16,8 @@ $(WASI_TEST_SUITE_DST)/%.wasm: $(WASI_TEST_SUITE_SRC)/%.wasm $(WASM_OPT)
 	$(WASM_OPT) -g -O --asyncify $< -o $@
 
 # https://github.com/bytecodealliance/wasmtime/tree/main/crates/test-programs/wasi-tests
-WASI_TESTS_CRATE_PATH := ../deps/wasmtime/crates/test-programs/wasi-tests
-WASMTIME_BIN := $(WASI_TESTS_CRATE_PATH)/target/wasm32-wasi/debug
+WASI_TESTS_CRATE_PATH := ../deps/wasmtime/crates/test-programs
+WASMTIME_BIN := $(WASI_TESTS_CRATE_PATH)/wasi-tests/target/wasm32-wasi/debug
 WASMTIME_SRC := $(WASI_TESTS_CRATE_PATH)/src/bin
 WASMTIME_DST := $(OUTPUT_DIR)/wasmtime
 WASMTIME_SRC_TESTS := $(shell ls $(WASI_TESTS_CRATE_PATH)/src/bin/*.rs)
@@ -77,5 +77,5 @@ export WASI_LDFLAGS := -flto -Wl,--allow-undefined
 
 $(BENCHMARK_DST)/%.wasm: $(WASI_SDK_PATH) $(WASM_OPT) $(BENCHMARK_SRC)/%.c
 	mkdir -p $(BENCHMARK_DST)
-	$(WASI_CC) $(WASI_CFLAGS) $(WASI_LDFLAGS) subjects/$*.c -o $(BENCHMARK_DST)/$*.wasm 
+	$(WASI_CC) $(WASI_CFLAGS) $(WASI_LDFLAGS) subjects/$*.c -o $(BENCHMARK_DST)/$*.wasm
 	$(WASM_OPT) -g -O --asyncify $(BENCHMARK_DST)/$*.wasm -o $(BENCHMARK_DST)/$*.asyncify.wasm

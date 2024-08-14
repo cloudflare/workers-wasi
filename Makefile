@@ -16,6 +16,15 @@ clean:
 	rm -rf ./node_modules/
 	rm -rf ./test/node_modules/
 
+UNAME := $(shell uname)
+ifeq ($(UNAME), Darwin)
+  WASI_SDK_FILE := wasi-sdk-13.0-macos.tar.gz
+  WASI_SDK_PATH := wasi-sdk-13
+else
+  WASI_SDK_FILE := wasi-sdk-13.0-linux.tar.gz
+  WASI_SDK_PATH := wasi-sdk-13
+endif
+
 WASI_SDK_PATH := ./deps/wasi-sdk-13.0
 WASI_SYSROOT  := $(abspath ${WASI_SDK_PATH}/share/wasi-sysroot)
 
@@ -55,7 +64,8 @@ dist/index.mjs: $(wildcard ./src/**) node_modules dist/memfs.wasm
 
 $(WASI_SDK_PATH):
 	mkdir -p $(@D)
-	curl -sLo wasi-sdk.tar.gz https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-13/wasi-sdk-13.0-linux.tar.gz
-	echo 'aea04267dd864a2f41e21f6cc43591b73dd8901e1ad4e87decf8c4b5905c73cf wasi-sdk.tar.gz' | sha256sum -c
-	tar zxf wasi-sdk.tar.gz --touch -C deps
-	rm wasi-sdk.tar.gz
+	curl -sLo $(WASI_SDK_FILE) https://github.com/WebAssembly/wasi-sdk/releases/download/$(WASI_SDK_PATH)/$(WASI_SDK_FILE)
+	curl -sLo $(WASI_SDK_FILE).sha256 https://github.com/WebAssembly/wasi-sdk/releases/download/$(WASI_SDK_PATH)/$(WASI_SDK_FILE).sha256
+	cat $(WASI_SDK_FILE).sha256 | sha256sum -c
+	tar zxf $(WASI_SDK_FILE) --touch -C deps
+	rm $(WASI_SDK_FILE) $(WASI_SDK_FILE).sha256

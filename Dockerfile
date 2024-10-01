@@ -9,6 +9,7 @@ RUN apt-get update -qq && \
 # install nodejs
 RUN curl -sL https://deb.nodesource.com/setup_17.x  | bash -
 RUN apt-get -qq -y install nodejs
+RUN git config --global --add safe.directory /workers-wasi
 
 WORKDIR /workers-wasi
 

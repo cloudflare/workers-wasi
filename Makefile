@@ -50,8 +50,8 @@ node_modules: ./package.json ./package-lock.json
 
 dist/index.mjs: $(wildcard ./src/**) node_modules dist/memfs.wasm
 	sed -i 's/^class Asyncify/export class Asyncify/g' ./deps/asyncify/asyncify.mjs
-	$(shell npm bin)/tsc -p ./tsconfig.json
-	$(shell npm bin)/esbuild --bundle ./src/index.ts --outfile=$@ --format=esm --log-level=warning --external:*.wasm
+	$(shell npm root)/.bin/tsc -p ./tsconfig.json
+	$(shell npm root)/.bin/esbuild --bundle ./src/index.ts --outfile=$@ --format=esm --log-level=warning --external:*.wasm
 
 $(WASI_SDK_PATH):
 	mkdir -p $(@D)

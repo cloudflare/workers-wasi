@@ -47,9 +47,9 @@ $(OUTPUT_DIR)/standalone.mjs: $(BENCHMARK_DST_TESTS) node_modules ./driver/*.ts
 	node benchmark-build.mjs
 
 run-tests: $(BUNDLE) $(OUTPUT_DIR)/wasm-table.ts node_modules $(OUTPUT_DIR)/standalone.mjs
-	$(shell npm bin)/tsc -p ./tsconfig.json
+	$(shell npm root)/.bin/tsc -p ./tsconfig.json
 	JEST_JUNIT_OUTPUT_DIR=$(OUTPUT_DIR) OUTPUT_DIR=$(OUTPUT_DIR) NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 \
-        $(shell npm bin)/jest --detectOpenHandles -i
+        $(shell npm root)/.bin/jest --detectOpenHandles -i
 
 $(OUTPUT_DIR)/wasm-table.ts: $(WASI_TEST_SUITE_DST_TESTS) $(WASMTIME_DST_TESTS)
 	mkdir -p $(@D)
@@ -61,7 +61,7 @@ $(MEMFS_DST): $(MEMFS_SRC)
 
 $(BUNDLE): $(wildcard ../dist/**) $(wildcard ./driver/**) $(MEMFS_DST) $(OUTPUT_DIR)/wasm-table.ts node_modules
 	mkdir -p $(@D)
-	$(shell npm bin)/esbuild --bundle ./driver/worker.ts --outfile=$@ --format=esm --log-level=warning --external:*.wasm
+	$(shell npm root)/.bin/esbuild --bundle ./driver/worker.ts --outfile=$@ --format=esm --log-level=warning --external:*.wasm
 
 $(WASM_OPT):
 	@$(call color,"downloading binaryen")

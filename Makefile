@@ -16,10 +16,10 @@ clean:
 	rm -rf ./node_modules/
 	rm -rf ./test/node_modules/
 
-WASI_SDK_PATH := ./deps/wasi-sdk-13.0
+WASI_SDK_PATH := ./deps/wasi-sdk-25.0
 WASI_SYSROOT  := $(abspath ${WASI_SDK_PATH}/share/wasi-sysroot)
 
-export CC      := $(abspath ${WASI_SDK_PATH}/bin/clang) -target wasm32-wasi --sysroot=${WASI_SYSROOT}
+export CC      := $(abspath ${WASI_SDK_PATH}/bin/clang) -target wasm32-wasip1 --sysroot=${WASI_SYSROOT}
 export CFLAGS  := -Oz -flto -I ./deps/rapidjson/include -I./deps/littlefs -fno-exceptions -include ./src/config.h
 export LDFLAGS := -lstdc++ -flto -Wl,--allow-undefined
 export CXXFLAGS := -std=c++20
@@ -50,12 +50,13 @@ node_modules: ./package.json ./package-lock.json
 
 dist/index.mjs: $(wildcard ./src/**) node_modules dist/memfs.wasm
 	sed -i 's/^class Asyncify/export class Asyncify/g' ./deps/asyncify/asyncify.mjs
-	$(shell npm bin)/tsc -p ./tsconfig.json
-	$(shell npm bin)/esbuild --bundle ./src/index.ts --outfile=$@ --format=esm --log-level=warning --external:*.wasm
+	$(shell npm root)/.bin/tsc -p ./tsconfig.json
+	$(shell npm root)/.bin/esbuild --bundle ./src/index.ts --outfile=$@ --format=esm --log-level=warning --external:*.wasm
 
 $(WASI_SDK_PATH):
 	mkdir -p $(@D)
-	curl -sLo wasi-sdk.tar.gz https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-13/wasi-sdk-13.0-linux.tar.gz
-	echo 'aea04267dd864a2f41e21f6cc43591b73dd8901e1ad4e87decf8c4b5905c73cf wasi-sdk.tar.gz' | sha256sum -c
-	tar zxf wasi-sdk.tar.gz --touch -C deps
+	curl -sLo wasi-sdk.tar.gz https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-25/wasi-sdk-25.0-x86_64-linux.tar.gz
+	echo '52640dde13599bf127a95499e61d6d640256119456d1af8897ab6725bcf3d89c wasi-sdk.tar.gz' | sha256sum -c
+	mkdir -p ./deps/wasi-sdk-25.0
+	tar zxf wasi-sdk.tar.gz --touch --strip=1 -C ./deps/wasi-sdk-25.0
 	rm wasi-sdk.tar.gz

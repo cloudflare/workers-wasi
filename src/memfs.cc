@@ -6,11 +6,14 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <string.h>
 
 #include "bd/lfs_rambd.h"
 #include "config.h"
 #include "lfs.h"
 #include "util.h"
+#include <stdio.h>
+#include <algorithm>  
 
 void wasi_trace(int error, const char* fmt, ...) {
   char* line;
@@ -807,7 +810,7 @@ struct Context {
     auto resolved_path = frame.alloc_uninitialized<char>(new_path_size);
 
     char* iter = resolved_path.data();
-    memcpy(iter, dir.begin(), dir.size());
+    std::copy(dir.begin(), dir.end(), iter);
     iter += dir.size();
 
     if (unresolved_path == ".") {

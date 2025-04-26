@@ -21,7 +21,8 @@ await wasi.start(instance);
 ## Development
 Install [Rust](https://www.rust-lang.org/tools/install) and [nvm](https://github.com/nvm-sh/nvm) then run
 ```
-nvm use --lts
+nvm install 22.15.0
+nvm use 22.15.0
 ```
 Build and test
 

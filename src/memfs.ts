@@ -59,6 +59,8 @@ export class MemFS {
         fd_seek: (): number => wasi.Result.ENOSYS,
         fd_write: (): number => wasi.Result.ENOSYS,
         fd_close: (): number => wasi.Result.ENOSYS,
+        random_get:  (buf: any, len: any) => 0,
+        sched_yield: ()    => 0,
       },
     })
     this.exports = this.#instance.exports as unknown as wasi.SnapshotPreview1
